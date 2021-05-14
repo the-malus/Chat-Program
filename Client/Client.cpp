@@ -10,7 +10,7 @@ Client::Client(const std::string& name, Logger::LogLevel logLevel /*= none*/)
 
 Client::~Client()
 {
-	//disconnectFromServer();
+	disconnectFromServer();
 }
 
 void Client::connectToServer(const std::string& serverAddress, int port)
@@ -62,31 +62,50 @@ void Client::connectToServer(const std::string& serverAddress, int port)
 	m_readThread = std::thread([this]() { readMessages(); });
 	m_connected = true;
 
-	sendMessages();
+	//sendMessages();
 
-	if (m_readThread.joinable())
-	{
-		m_readThread.join();
-	}
+	//if (m_readThread.joinable())
+	//{
+	//	m_readThread.join();
+	//}
 
 	return;
 }
 
-//void Client::disconnectFromServer()
-//{
-//	if (m_connected)
-//	{
-//		closesocket(m_connection);
-//		WSACleanup();
-//
-//		m_connected = false;
-//		if (m_readerThread.joinable())
-//		{
-//			m_readThread.join();
-//		}
-//
-//	}
-//}
+void Client::sendMessage(const std::string& message)
+{
+	int status = send(m_connection, message.c_str(), int(message.size()) + 1, 0);
+	if (status == SOCKET_ERROR)
+	{
+		m_log.log(Logger::LogLevel::error, "Failed to send message");
+		//m_connected = false;
+		//m_readThread.detach();
+		//closesocket(m_connection);
+	}
+}
+
+void Client::listenToMessageReceived(std::function<void(const std::string&)> callbackFunction)
+{
+	m_messageListener = callbackFunction;
+}
+
+bool Client::isConnected() const
+{
+	return m_connected;
+}
+
+void Client::disconnectFromServer()
+{
+	if (m_connected)
+	{
+		closesocket(m_connection);
+		WSACleanup();
+
+		m_connected = false;
+		m_readThread.detach();
+
+	}
+}
 
 void Client::sendMessages()
 {
@@ -98,9 +117,11 @@ void Client::sendMessages()
 		status = send(m_connection, message.c_str(), int(message.size()) + 1, 0);
 		if (status == SOCKET_ERROR)
 		{
+			m_log.log(Logger::LogLevel::error, "Failed to send message");
 			m_connected = false;
 			m_readThread.detach();
 			closesocket(m_connection);
+			WSACleanup();
 			return;
 		}
 	}
@@ -119,5 +140,9 @@ void Client::readMessages()
 		}
 
 		m_log.log(Logger::LogLevel::message, messageBuf);
+		if (m_messageListener)
+		{
+			m_messageListener(std::string(messageBuf));
+		}
 	}
 }

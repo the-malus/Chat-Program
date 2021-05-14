@@ -120,7 +120,7 @@ void Server::handleClient(SOCKET clientSocket)
 	std::string introduction = clientName + " has joined the chat.";
 	broadcastMessage(introduction, clientSocket);
 
-	std::string welcome = "Welcome to the chat, " + clientName;
+	std::string welcome = "Welcome to the chat, " + clientName + "!";
 	sendMessage(clientSocket, welcome, true);
 
 	while (true)
