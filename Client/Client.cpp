@@ -80,11 +80,9 @@ void Client::connectToServer(const std::string& serverAddress, int port)
 //		WSACleanup();
 //
 //		m_connected = false;
-//		if (m_readerThread)
+//		if (m_readerThread.joinable())
 //		{
-//			m_readerThread->join();
-//			delete m_readerThread;
-//			m_readerThread = 0;
+//			m_readThread.join();
 //		}
 //
 //	}

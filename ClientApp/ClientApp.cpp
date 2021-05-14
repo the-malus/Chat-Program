@@ -5,7 +5,11 @@
 
 int main()
 {
-	Client c("clientName", Logger::LogLevel::all);
+	std::string name;
+	std::cout << "Enter your name: ";
+	std::getline(std::cin, name);
+
+	Client c(name, Logger::LogLevel::all);
 	c.connectToServer("127.0.0.1");
 	return 0;
 }

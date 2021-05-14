@@ -131,6 +131,7 @@ void Server::handleClient(SOCKET clientSocket)
 			std::string goodbye = clientName + " has left the chat.";
 			broadcastMessage(goodbye, clientSocket);
 			endConnection(clientSocket);
+			m_log.log(Logger::LogLevel::info, "Disconnected from client");
 			return;
 		}
 		else if (status == 1)
