@@ -1,4 +1,6 @@
-include_directories(${CMAKE_SOURCE_DIR}/Server)
+include_directories(
+    ${CMAKE_SOURCE_DIR}/Server
+    ${CMAKE_SOURCE_DIR}/Logger)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

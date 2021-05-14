@@ -1,36 +1,35 @@
 #include "Server.h"
 
-#include <iostream>
-
-int Server::clientId = 0;
-
-Server::Server()
+Server::Server(Logger::LogLevel logLevel)
+	: m_log(logLevel)
 {
 }
 
 void Server::run()
 {
+	m_log.log(Logger::LogLevel::info, "Initializing");
+
 	WSADATA wsaData;
 	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (iResult != 0)
 	{
-		std::cout << "WSAStartup failed: " << iResult << std::endl;
+		m_log.log(Logger::LogLevel::error, "WSAStartup failed");
 		return;
 	}
 	else
 	{
-		std::cout << "WSAStartup successful" << std::endl;
+		m_log.log(Logger::LogLevel::info, "WSAStartup successful");
 	}
 
 	SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == INVALID_SOCKET)
 	{
-		std::cout << "Failed to create socket: " << WSAGetLastError() << std::endl;
+		m_log.log(Logger::LogLevel::error, "Failed to create socket");
 		return;
 	}
 	else
 	{
-		std::cout << "Created socket" << std::endl;
+		m_log.log(Logger::LogLevel::info, "Created socket");
 	}
 
 	sockaddr_in local;
@@ -42,49 +41,28 @@ void Server::run()
 
 	if (connResult == SOCKET_ERROR)
 	{
-		std::cout << "Failed to bind socket: " << WSAGetLastError() << std::endl;
+		m_log.log(Logger::LogLevel::error, "Failed to bind socket");
 		closesocket(serverSocket);
 		return;
 	}
 	else
 	{
-		std::cout << "Bind successful" << std::endl;
+		m_log.log(Logger::LogLevel::info, "Bind successful");
 	}
 
 	connResult = listen(serverSocket, 10);
 	if (connResult == SOCKET_ERROR)
 	{
-		std::cout << "Failed to listen: " << WSAGetLastError() << std::endl;
+		m_log.log(Logger::LogLevel::error, "Failed to listen");
 		closesocket(serverSocket);
 		return;
 	}
 	else
 	{
-		std::cout << "Listening" << std::endl;
+		m_log.log(Logger::LogLevel::info, "Listening for clients");
 	}
 
-	sockaddr_in clientAddr;
-	int addrLen = sizeof(clientAddr);
-	SOCKET clientSocket;
-	
-	while (true)
-	{
-		clientSocket = accept(serverSocket, (sockaddr*)&clientAddr, &addrLen);
-		if (clientSocket == INVALID_SOCKET)
-		{
-			std::cout << "Failed to accept connection: " << WSAGetLastError() << std::endl;
-			closesocket(serverSocket);
-			return;
-		}
-		else
-		{
-			std::cout << "Connected" << std::endl;
-		}
-
-
-		m_clients[clientSocket].handler = std::thread([this, clientSocket]() { handleClient(clientSocket); });
-
-	}
+	acceptClients(serverSocket);
 
 	for (auto& client : m_clients)
 	{
@@ -96,77 +74,33 @@ void Server::run()
 	}
 
 	closesocket(serverSocket);
-	
-	
-	// = accept(acceptSocket, (sockaddr*)&clientAddr, &addrLen);
-	//if (clientSocket == INVALID_SOCKET)
-	//{
-	//	std::cout << "Failed to accept connection: " << WSAGetLastError() << std::endl;
-	//	closesocket(acceptSocket);
-	//	return;
-	//}
-	//else
-	//{
-	//	std::cout << "Connected" << std::endl;
-	//}
 
-	//closesocket(acceptSocket);
+	return;
+}
 
-	//char msgbuf[256];
-	//char response[256];
-	//int recvResult;
-	//do
-	//{
-	//	recvResult = recv(clientSocket, msgbuf, 256, 0);
-	//	if (recvResult == 0)
-	//	{
-	//		std::cout << "Closing connection" << std::endl;
-	//		break;
-	//	}
-	//	else if (recvResult > 0)
-	//	{
-	//		msgbuf[recvResult] = '\0';
-	//		std::cout << "Received message: " << msgbuf << std::endl;
+void Server::acceptClients(SOCKET serverSocket)
+{
+	sockaddr_in clientAddr;
+	int addrLen = sizeof(clientAddr);
+	SOCKET clientSocket;
 
-	//		sprintf(response, "Received: %s", msgbuf);
-	//		int sendResult = send(clientSocket, response, strlen(response), 0);
-	//		if (sendResult == SOCKET_ERROR)
-	//		{
-	//			std::cout << "Failed to send response: " << WSAGetLastError() << std::endl;
-	//			closesocket(clientSocket);
-	//			return;
-	//		}
-	//		else
-	//		{
-	//			std::cout << "Sent response" << std::endl;
-	//		}
-	//	}
-	//	else
-	//	{
-	//		std::cout << "Failed to receive message: " << WSAGetLastError() << std::endl;
-	//		closesocket(clientSocket);
-	//		return;
-	//	}
-	//} 	while (recvResult > 0);
+	while (true)
+	{
+		clientSocket = accept(serverSocket, (sockaddr*)&clientAddr, &addrLen);
+		if (clientSocket == INVALID_SOCKET)
+		{
+			m_log.log(Logger::LogLevel::warning, "Failed to connect to client");
+			continue;
+		}
+		else
+		{
+			m_log.log(Logger::LogLevel::info, "Connected to client");
+		}
 
-	//int closeResult = shutdown(clientSocket, SD_SEND);
-	//if (closeResult == SOCKET_ERROR)
-	//{
-	//	std::cout << "Failed to close connection: " << WSAGetLastError() << std::endl;
-	//	closesocket(clientSocket);
-	//	return;
-	//}
-	//else
-	//{
-	//	std::cout << "Closed connection" << std::endl;
-	//}
 
-	//closesocket(clientSocket);
-	//WSACleanup();
+		m_clients[clientSocket].handler = std::thread([this, clientSocket]() { handleClient(clientSocket); });
 
-	//return;
-
-	//std::cout << "value: " << m_value << std::endl;
+	}
 }
 
 void Server::handleClient(SOCKET clientSocket)
@@ -175,16 +109,19 @@ void Server::handleClient(SOCKET clientSocket)
 	int status = recv(clientSocket, messageBuf, BUF_SIZE, 0);
 	if (status == SOCKET_ERROR)
 	{
-		std::cout << "Failed to read name" << std::endl;
+		m_log.log(Logger::LogLevel::warning, "Failed to receive client name");
 		endConnection(clientSocket);
+		return;
 	}
 
 	std::string clientName(messageBuf);
 	m_clients[clientSocket].name = clientName;
 
-	std::string welcome = clientName + " has joined the chat.";
-	broadcastMessage(welcome, clientSocket);
-	std::cout << welcome << std::endl;
+	std::string introduction = clientName + " has joined the chat.";
+	broadcastMessage(introduction, clientSocket);
+
+	std::string welcome = "Welcome to the chat, " + clientName;
+	sendMessage(clientSocket, welcome, true);
 
 	while (true)
 	{
@@ -195,6 +132,10 @@ void Server::handleClient(SOCKET clientSocket)
 			broadcastMessage(goodbye, clientSocket);
 			endConnection(clientSocket);
 			return;
+		}
+		else if (status == 1)
+		{
+			continue;
 		}
 
 		std::string message = clientName + ": " + std::string(messageBuf);
@@ -212,17 +153,27 @@ void Server::endConnection(SOCKET clientSocket)
 
 void Server::broadcastMessage(const std::string& message, SOCKET senderSocket)
 {
-	int status;
-	std::cout << message << std::endl;
+	m_log.log(Logger::LogLevel::message, message);
+
 	for (auto& client : m_clients)
 	{
 		if (client.first != senderSocket)
 		{
-			status = send(client.first, message.c_str(), message.length() + 1, 0);
-			if (status <= 0)
-			{
-				std::cout << "something went wrong" << std::endl;
-			}
+			sendMessage(client.first, message, false);
 		}
+	}
+}
+
+void Server::sendMessage(SOCKET clientSocket, const std::string& message, bool log)
+{
+	if (log)
+	{
+		m_log.log(Logger::LogLevel::message, message);
+	}
+
+	int status = send(clientSocket, message.c_str(), int(message.length()) + 1, 0);
+	if (status <= 0)
+	{
+		m_log.log(Logger::LogLevel::warning, "Failed to send message to client");
 	}
 }

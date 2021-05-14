@@ -2,7 +2,7 @@
 
 int main()
 {
-	Server s;
+	Server s(Logger::LogLevel::all);
 	s.run();
 
 	return 0;
