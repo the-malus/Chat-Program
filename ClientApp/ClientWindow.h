@@ -2,7 +2,7 @@
 #define CLIENTWINDOW_H
 
 #include <QMainWindow>
-#include "Client.h"
+#include <Client.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ClientWindow; }
@@ -16,12 +16,15 @@ public:
     ClientWindow(Client* client, QWidget *parent = nullptr);
     ~ClientWindow();
 
+signals:
+    void messageReceived(const std::string& message);
+
 private slots:
     void onSendMessage();
+    void onMessageReceived(const std::string& message);
 
 private:
     void connectSignals();
-    void onMessageReceived(const std::string& message);
 
     Ui::ClientWindow *ui;
     Client* m_client;

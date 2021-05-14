@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>ClientLogin</class>
+ <widget class="QDialog" name="ClientLogin">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>41</height>
+    <height>70</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Login</string>
   </property>
   <widget class="QLineEdit" name="nameInput">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>70</x>
      <y>10</y>
-     <width>321</width>
+     <width>261</width>
      <height>20</height>
     </rect>
    </property>
@@ -29,14 +29,55 @@
      <x>340</x>
      <y>10</y>
      <width>51</width>
-     <height>21</height>
+     <height>51</height>
     </rect>
    </property>
    <property name="text">
     <string>Connect</string>
    </property>
   </widget>
+  <widget class="QLabel" name="nameLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>51</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Username:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="serverLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>51</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Server IP:</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="serverInput">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>40</y>
+     <width>261</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
+ <tabstops>
+  <tabstop>nameInput</tabstop>
+  <tabstop>serverInput</tabstop>
+  <tabstop>connectButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

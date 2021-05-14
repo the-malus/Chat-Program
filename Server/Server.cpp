@@ -74,6 +74,7 @@ void Server::run()
 	}
 
 	closesocket(serverSocket);
+	WSACleanup();
 
 	return;
 }

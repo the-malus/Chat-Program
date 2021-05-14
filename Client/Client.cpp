@@ -1,16 +1,20 @@
 #include "Client.h"
-//#include <Windows.h>
-#include <WS2tcpip.h>
-#include <iostream>
 
-Client::Client(const std::string& name, Logger::LogLevel logLevel /*= none*/)
-	: m_name(name), m_log(logLevel), m_connected(false), m_connection()
+#include <WS2tcpip.h>
+
+Client::Client(Logger::LogLevel logLevel)
+	: m_name("no name"), m_log(logLevel), m_connected(false), m_connection()
 {
 }
 
 Client::~Client()
 {
 	disconnectFromServer();
+}
+
+void Client::setName(const std::string& name)
+{
+	m_name = name;
 }
 
 void Client::connectToServer(const std::string& serverAddress, int port)
@@ -62,25 +66,18 @@ void Client::connectToServer(const std::string& serverAddress, int port)
 	m_readThread = std::thread([this]() { readMessages(); });
 	m_connected = true;
 
-	//sendMessages();
-
-	//if (m_readThread.joinable())
-	//{
-	//	m_readThread.join();
-	//}
-
 	return;
 }
 
 void Client::sendMessage(const std::string& message)
 {
-	int status = send(m_connection, message.c_str(), int(message.size()) + 1, 0);
-	if (status == SOCKET_ERROR)
+	if (m_connected)
 	{
-		m_log.log(Logger::LogLevel::error, "Failed to send message");
-		//m_connected = false;
-		//m_readThread.detach();
-		//closesocket(m_connection);
+		int status = send(m_connection, message.c_str(), int(message.size()) + 1, 0);
+		if (status == SOCKET_ERROR)
+		{
+			m_log.log(Logger::LogLevel::error, "Failed to send message");
+		}
 	}
 }
 
@@ -104,26 +101,6 @@ void Client::disconnectFromServer()
 		m_connected = false;
 		m_readThread.detach();
 
-	}
-}
-
-void Client::sendMessages()
-{
-	int status;
-	std::string message;
-	while (true)
-	{
-		std::getline(std::cin, message);
-		status = send(m_connection, message.c_str(), int(message.size()) + 1, 0);
-		if (status == SOCKET_ERROR)
-		{
-			m_log.log(Logger::LogLevel::error, "Failed to send message");
-			m_connected = false;
-			m_readThread.detach();
-			closesocket(m_connection);
-			WSACleanup();
-			return;
-		}
 	}
 }
 

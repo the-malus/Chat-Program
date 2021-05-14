@@ -12,9 +12,9 @@ set(CLIENTAPP_SOURCES
     ClientWindow.cpp
     ClientWindow.h
     ClientWindow.ui
-    #ClientLogin.cpp
-    #ClientLogin.h
-    #ClientLogin.ui
+    ClientLogin.cpp
+    ClientLogin.h
+    ClientLogin.ui
 )
 
 add_executable(ClientApp ${CLIENTAPP_SOURCES})

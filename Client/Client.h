@@ -11,11 +11,11 @@ class Client
 {
 	static constexpr int BUF_SIZE = 512;
 
-	//typedef void (*callback_function)(const std::string&);
-
 public:
-	Client(const std::string& name, Logger::LogLevel logLevel = Logger::LogLevel::error);
+	Client(Logger::LogLevel logLevel = Logger::LogLevel::none);
 	~Client();
+
+	void setName(const std::string& name);
 	void connectToServer(const std::string& serverAddress, int port = 8084);
 
 	void sendMessage(const std::string& message);
@@ -25,8 +25,6 @@ public:
 
 private:
 	void disconnectFromServer();
-
-	void sendMessages();
 	void readMessages();
 
 private:
@@ -36,7 +34,6 @@ private:
 	bool m_connected;
 	SOCKET m_connection;
 	std::thread m_readThread;
-	std::thread m_sendThread;
 
 	std::function<void(const std::string&)> m_messageListener;
 };

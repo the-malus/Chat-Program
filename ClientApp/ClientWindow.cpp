@@ -1,4 +1,5 @@
-#include "clientwindow.h"
+#include "ClientWindow.h"
+#include "ClientLogin.h"
 #include "./ui_clientwindow.h"
 
 ClientWindow::ClientWindow(Client* client, QWidget *parent)
@@ -7,18 +8,15 @@ ClientWindow::ClientWindow(Client* client, QWidget *parent)
     , ui(new Ui::ClientWindow)
 {
     ui->setupUi(this);
-
-    if (client->isConnected())
-    {
-        ui->textEdit->append("Connected to Server");
-    }
-    else
-    {
-        ui->textEdit->append("Failed to connect...");
-    }
-
     connectSignals();
 
+    ClientLogin login(m_client);
+    login.exec();
+
+    if (!m_client->isConnected())
+    {
+        ui->textEdit->append("Failed to connect to server.");
+    }
 }
 
 ClientWindow::~ClientWindow()
@@ -29,8 +27,9 @@ ClientWindow::~ClientWindow()
 
 void ClientWindow::connectSignals()
 {
-    m_client->listenToMessageReceived([this](const std::string& message) {onMessageReceived(message); });
+    m_client->listenToMessageReceived([this](const std::string& message) { emit messageReceived(message); });
 
+    connect(this, SIGNAL(messageReceived(const std::string&)), this, SLOT(onMessageReceived(const std::string&)));
     connect(ui->lineEdit, SIGNAL(returnPressed()), this, SLOT(onSendMessage()));
     connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(onSendMessage()));
 }
